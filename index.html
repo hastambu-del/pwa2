@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор рассрочки</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#f5f7fa;color:#1a1a1a;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:24px 16px}
+  .wrap{max-width:420px;width:100%}
+  h2{font-size:22px;font-weight:700;margin-bottom:6px}
+  .subtitle{color:#666;font-size:14px;margin-bottom:24px}
+
+  /* Экран активации */
+  .activate-screen{text-align:center;padding:20px 0}
+  .activate-screen .lock-icon{width:64px;height:64px;background:#eff6ff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+  .activate-screen p{color:#666;font-size:15px;margin-bottom:20px;line-height:1.5}
+  .field{margin-bottom:16px;text-align:left}
+  .field label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+  .field input{width:100%;padding:14px 16px;border:2px solid #d0d5dd;border-radius:10px;font-size:16px;outline:none;font-family:inherit}
+  .field input:focus{border-color:#2563eb}
+  .btn{width:100%;padding:16px;background:#2563eb;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s}
+  .btn:hover{background:#1d4ed8}
+  .btn:active{background:#1e40af}
+  .btn:disabled{background:#94a3b8;cursor:not-allowed}
+  .error-msg{display:none;background:#fee2e2;border:1px solid #ef4444;border-radius:10px;padding:12px 14px;color:#991b1b;font-size:14px;margin-top:12px}
+  .error-msg.show{display:block}
+
+  /* Калькулятор */
+  .calc{display:none}
+  .calc.show{display:block}
+  .field-group{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:20px;margin-bottom:20px}
+  .field-group .field:last-child{margin-bottom:0}
+  .result-card{background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:20px;margin-bottom:16px;text-align:center}
+  .result-card .label{font-size:14px;color:#666;margin-bottom:4px}
+  .result-card .big{font-size:32px;font-weight:800;color:#1e40af}
+  .result-card .sub{font-size:13px;color:#888;margin-top:6px}
+  .result-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;font-size:15px}
+  .result-row:last-child{border-bottom:none}
+  .result-row .val{font-weight:700}
+  .result-box{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:20px;margin-bottom:16px}
+  .warn{background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;font-size:13px;color:#92400e;margin-top:16px}
+  .update-banner{display:none;background:#dcfce7;border:1px solid #86efac;border-radius:10px;padding:12px 14px;font-size:14px;color:#166534;margin-bottom:20px}
+  .update-banner.show{display:block}
+  .logout-btn{width:100%;padding:12px;background:#fee2e2;color:#991b1b;border:1px solid #ef4444;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:16px}
+  .sub-info{font-size:13px;color:#888;text-align:center;margin-bottom:16px}
+  .sub-info .active{color:#16a34a;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ЭКРАН АКТИВАЦИИ -->
+  <div class="activate-screen" id="activateScreen">
+    <h2>Калькулятор рассрочки</h2>
+    <p class="subtitle">Для риелторов</p>
+    <div class="lock-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#2563eb" stroke-width="2"/>
+        <path d="M8 11V7a4 4 0 018 0v4" stroke="#2563eb" stroke-width="2"/>
+      </svg>
+    </div>
+    <p>Введите ключ доступа для активации.<br>Ключ можно получить у администратора.</p>
+    <div class="field">
+      <label for="keyInput">Ключ доступа</label>
+      <input type="text" id="keyInput" placeholder="HASTAMBU-XXXX-XXXX" autocomplete="off">
+    </div>
+    <button class="btn" onclick="activate()">Активировать</button>
+    <div class="error-msg" id="activateError"></div>
+  </div>
+
+  <!-- КАЛЬКУЛЯТОР -->
+  <div class="calc" id="calcScreen">
+    <h2>Калькулятор рассрочки</h2>
+    <p class="subtitle" id="complexName">--</p>
+
+    <div class="update-banner" id="updateBanner">
+      Тарифы обновлены. Расчёты пересчитаны автоматически.
+    </div>
+
+    <div class="sub-info" id="subInfo"></div>
+
+    <div class="field-group">
+      <div class="field">
+        <label for="area">Площадь квартиры, м²</label>
+        <input type="number" id="area" value="60" min="10" max="300" step="0.1" inputmode="decimal">
+      </div>
+    </div>
+
+    <button class="btn" onclick="calc()">Рассчитать</button>
+
+    <div id="results" style="display:none;margin-top:20px;">
+      <div class="result-card">
+        <div class="label">Стоимость квартиры</div>
+        <div class="big" id="resPrice">--</div>
+        <div class="sub" id="resBreakdown">--</div>
+      </div>
+      <div class="result-box">
+        <div class="result-row"><span>ЖК</span><span class="val" id="resComplex">--</span></div>
+        <div class="result-row"><span>Площадь</span><span class="val" id="resArea">--</span></div>
+        <div class="result-row"><span>Цена за м²</span><span class="val" id="resPriceM2">--</span></div>
+        <div class="result-row"><span>Стоимость</span><span class="val" id="resTotal">--</span></div>
+      </div>
+      <div class="warn">Расчёт предварительный. Уточняйте наличие и точные цены у менеджера.</div>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Выйти</button>
+  </div>
+
+</div>
+
+<!-- OneSignal (раскомментировать после регистрации)
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignal = window.OneSignal || [];
+  OneSignal.push(function() {
+    OneSignal.init({ appId: "YOUR-ONESIGNAL-APP-ID" });
+  });
+</script>
+-->
+
+<script>
+let appData = null;
+let localVersion = null;
+
+// Проверка ключа при запуске
+window.addEventListener('load', async () => {
+  const savedKey = localStorage.getItem('accessKey');
+  if (savedKey) {
+    const valid = await checkKey(savedKey);
+    if (valid) showCalc();
+    else showActivate();
+  } else {
+    showActivate();
+  }
+  // Регистрация Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(e => console.log('SW error:', e));
+  }
+});
+
+function showActivate() {
+  document.getElementById('activateScreen').style.display = 'block';
+  document.getElementById('calcScreen').classList.remove('show');
+}
+function showCalc() {
+  document.getElementById('activateScreen').style.display = 'none';
+  document.getElementById('calcScreen').classList.add('show');
+  loadData();
+}
+
+async function checkKey(key) {
+  try {
+    const resp = await fetch('keys.json?nocache=' + Date.now());
+    const keysData = await resp.json();
+    const found = keysData.keys.find(k => k.code === key);
+    if (!found) return false;
+    const now = new Date();
+    const exp = new Date(found.expires);
+    if (exp < now) return false;
+    localStorage.setItem('accessKey', key);
+    localStorage.setItem('keyLabel', found.label || '');
+    localStorage.setItem('keyExpires', found.expires);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function activate() {
+  const key = document.getElementById('keyInput').value.trim();
+  const err = document.getElementById('activateError');
+  err.classList.remove('show');
+  if (!key) { err.textContent = 'Введите ключ доступа'; err.classList.add('show'); return; }
+  const valid = await checkKey(key);
+  if (valid) showCalc();
+  else { err.textContent = 'Неверный или истекший ключ'; err.classList.add('show'); }
+}
+
+async function loadData() {
+  try {
+    const resp = await fetch('data.json?nocache=' + Date.now());
+    appData = await resp.json();
+    // Проверка обновления
+    const storedVer = localStorage.getItem('dataVersion');
+    if (storedVer && storedVer !== appData.version) {
+      document.getElementById('updateBanner').classList.add('show');
+    }
+    localStorage.setItem('dataVersion', appData.version);
+
+    const c = appData.complexes[0];
+    document.getElementById('complexName').textContent = c.name;
+
+    // Инфо о подписке
+    const exp = localStorage.getItem('keyExpires');
+    const label = localStorage.getItem('keyLabel');
+    if (exp) {
+      const expDate = new Date(exp).toLocaleDateString('ru-RU');
+      document.getElementById('subInfo').innerHTML = 'Подписка: <span class="active">' + (label || 'активна') + '</span> до ' + expDate;
+    }
+  } catch (e) {
+    console.error('Load data error:', e);
+  }
+}
+
+function formatNum(n) {
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+function calc() {
+  if (!appData) return;
+  const c = appData.complexes[0];
+  const area = parseFloat(document.getElementById('area').value);
+  if (!area || area <= 0) { alert('Введите площадь'); return; }
+
+  const pricePerM2 = c.pricePerSqm;
+  const total = area * pricePerM2;
+
+  document.getElementById('resPrice').textContent = formatNum(total) + ' руб';
+  document.getElementById('resBreakdown').textContent = area + ' м² × ' + pricePerM2.toLocaleString('ru-RU') + ' руб';
+  document.getElementById('resComplex').textContent = c.name;
+  document.getElementById('resArea').textContent = area + ' м²';
+  document.getElementById('resPriceM2').textContent = pricePerM2.toLocaleString('ru-RU') + ' руб';
+  document.getElementById('resTotal').textContent = formatNum(total) + ' руб';
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function logout() {
+  localStorage.removeItem('accessKey');
+  localStorage.removeItem('keyLabel');
+  localStorage.removeItem('keyExpires');
+  showActivate();
+}
+</script>
+</body>
+</html>

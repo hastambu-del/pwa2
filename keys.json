@@ -1,0 +1,19 @@
+{
+  "keys": [
+    {
+      "code": "HASTAMBU-DEMO-2026",
+      "expires": "2026-12-31",
+      "label": "Демо-доступ"
+    },
+    {
+      "code": "REALTOR-30D-001",
+      "expires": "2026-11-01",
+      "label": "30 дней"
+    },
+    {
+      "code": "REALTOR-1Y-002",
+      "expires": "2027-10-01",
+      "label": "1 год"
+    }
+  ]
+}
